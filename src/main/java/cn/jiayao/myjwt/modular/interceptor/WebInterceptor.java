@@ -28,11 +28,6 @@ import javax.servlet.http.HttpServletResponse;
 public class WebInterceptor implements HandlerInterceptor {
 
     /**
-     * 需要JWT拦截的Url
-     */
-    @Value("${jwt.secret-url}")
-    private String jwtSecretUrl;
-    /**
      * JWT密钥
      */
     @Value("${jwt.safety.secret}")

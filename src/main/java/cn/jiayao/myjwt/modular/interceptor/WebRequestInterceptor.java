@@ -24,11 +24,6 @@ public class WebRequestInterceptor extends WebMvcConfigurerAdapter {
     @Value("${jwt.secret-url}")
     private String jwtSecretUrl;
     /**
-     * 需要JWT拦截的Url
-     */
-    @Value("${jwt.noSecret-url}")
-    private String jwtNoSecretUrl;
-    /**
      * JWT密钥
      */
     @Value("${jwt.safety.secret}")
@@ -37,8 +32,7 @@ public class WebRequestInterceptor extends WebMvcConfigurerAdapter {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         jwtSecretUrl = jwtSecretUrl.replaceAll(" ", "");
-        jwtNoSecretUrl = jwtNoSecretUrl.replaceAll(" ", "");
-        registry.addInterceptor(webInterceptor).addPathPatterns(jwtSecretUrl.split(",")).excludePathPatterns(jwtNoSecretUrl.split(","));
+        registry.addInterceptor(webInterceptor).addPathPatterns(jwtSecretUrl.split(","));
     }
 
 }

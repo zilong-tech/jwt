@@ -24,13 +24,4 @@ public enum Header {
         this.details = details;
     }
 
-    /**
-     * 根据枚举类型获取code码
-     * @param header
-     * @return
-     */
-    public static String getCode(Header header){
-        return header.code;
-    }
-
 }

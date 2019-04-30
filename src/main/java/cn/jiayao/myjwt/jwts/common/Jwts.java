@@ -111,7 +111,7 @@ public class Jwts extends HashMap {
     }
     /**
      * @author: JiaYao
-     * @demand: 校验token完整性和实效性
+     * @demand: 校验token完整性和时效性
      * @parameters:
      * @creationDate：
      * @email:
