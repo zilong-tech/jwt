@@ -1,4 +1,4 @@
-package cn.jiayao.myjwt.jwts.common;
+package cn.jiayao.myjwt.jwts.data;
 
 import java.util.HashMap;
 import java.util.Objects;
@@ -15,20 +15,21 @@ import java.util.Objects;
 public class JwtClaims extends HashMap {
 
     public JwtClaims() {
-        this.put(ID, null);
-        this.put(NAME, null);
-        this.put(PHONE, null);
-        this.put(FAILURETIME, null);
+        this.put("id", null);
+        this.put("name", null);
+        this.put("phone", null);
+        /**
+         * 有效期
+         */
+        this.put("failureTime", null);
     }
 
-    String ID = "id";
-    String NAME = "name";
-    String PHONE = "phone";
     /**
-     * 有效期
+     * 向token中添加键值队
+     * @param key
+     * @param value
+     * @return
      */
-    String FAILURETIME = "failureTime";
-
     public JwtClaims put(String key, Object value) {
         super.put(key, value);
         return this;

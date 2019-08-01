@@ -1,4 +1,4 @@
-package cn.jiayao.myjwt.jwts.common;
+package cn.jiayao.myjwt.jwts.data;
 
 import cn.jiayao.myjwt.jwts.secret.Base64Utils;
 import cn.jiayao.myjwt.jwts.secret.aes.AESUtils;
@@ -7,10 +7,12 @@ import cn.jiayao.myjwt.jwts.secret.sm4.SM4Util;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 类 名: Jwts
@@ -22,11 +24,8 @@ import java.util.UUID;
  * @author: jiaYao
  */
 @Slf4j
-public class Jwts extends HashMap {
+public class Jwts extends ConcurrentHashMap {
 
-    /**
-     * 此处先忽略变量线程安全问题(后期优化)
-     */
     private static Jwts jwts;
 
     static {
@@ -36,7 +35,16 @@ public class Jwts extends HashMap {
     /**
      * 默认加密密钥
      */
-    private final String jwtSafetySecret = "0dcac1b6ec8843488fbe90e166617e34";
+    private final static String jwtSafetySecret = "0dcac1b6ec8843488fbe90e166617e34";
+
+    /**
+     * 采用默认加密算法
+     * @param header
+     * @return
+     */
+    public static Jwts header(Header header){
+        return header(header,jwtSafetySecret);
+    }
 
     /**
      * 指定加密算法和密钥
@@ -46,9 +54,9 @@ public class Jwts extends HashMap {
      * @return
      */
     public static Jwts header(Header header, String jwtSafetySecret) {
-        HashMap<String, Object> map = new HashMap<>();
+        HashMap<String, Object> map = new HashMap<>(8);
         map.put("code", header);
-        map.put("jwtSafetySecret", jwtSafetySecret);
+        map.put("jwtSafetySecret", StringUtils.isEmpty(jwtSafetySecret) ? Jwts.jwtSafetySecret : jwtSafetySecret);
         jwts.put("header", map);
         return jwts;
     }
@@ -72,21 +80,20 @@ public class Jwts extends HashMap {
         HashMap<String, Object> headerObj = (HashMap<String, Object>) jwts.get("header");
         // 数据
         JwtClaims jwtClaims = (JwtClaims) jwts.get("payload");
+        // uuid保证每次获取到的Token都是不同的
         jwtClaims.put("uuid", UUID.randomUUID());
         // 生成签名
         Object jwtSafetySecretObj = headerObj.get("jwtSafetySecret");
         // 从头部信息中去除密钥信息
         headerObj.remove("jwtSafetySecret");
-        String jwtSafetySecret = jwtSafetySecretObj == null ? this.jwtSafetySecret : jwtSafetySecretObj.toString();
-        Object code = headerObj.get("code");
-        String encryptionType = code == null ? "AES" : code.toString();
+        String byJwtSafetySecret = jwtSafetySecretObj == null ? jwtSafetySecret : jwtSafetySecretObj.toString();
         // 开始签名
-        String signature = dataSignature(headerObj, jwtClaims, encryptionType, jwtSafetySecret);
+        String signature = dataSignature(headerObj, jwtClaims, byJwtSafetySecret);
         // 生成token
         String token = Base64Utils.getBase64(JSONObject.toJSONString(headerObj)) + "."
                 + Base64Utils.getBase64(JSONObject.toJSONString(jwtClaims)) + "."
                 + signature;
-        System.out.println("生成的token为:" + token);
+        log.info("生成的token为:" + token);
         return token;
     }
     /**
@@ -94,11 +101,13 @@ public class Jwts extends HashMap {
      *
      * @param headerObj
      * @param jwtClaims
-     * @param encryptionType
      * @param jwtSafetySecret
      * @return
      */
-    private static String dataSignature(HashMap<String, Object> headerObj, JwtClaims jwtClaims, String encryptionType, String jwtSafetySecret) throws Exception {
+    private static String dataSignature(HashMap<String, Object> headerObj, JwtClaims jwtClaims, String jwtSafetySecret) throws Exception {
+        Object code = headerObj.get("code");
+        // 默认采用AES加密
+        String encryptionType = code == null ? "AES" : code.toString();
         String dataSignature = null;
         if (encryptionType.equals(Header.AES.name())) {
             dataSignature = AESUtils.encrypt(JSONObject.toJSONString(headerObj) + JSONObject.toJSONString(jwtClaims), jwtSafetySecret);
@@ -128,7 +137,6 @@ public class Jwts extends HashMap {
         JwtClaims jwtClaims = JSON.parseObject(Base64Utils.getFromBase64(split[1]), JwtClaims.class);
         // 签名信息
         String signature = split[2];
-
         // 验证token是否在有效期内
         if (jwtClaims.get("failureTime") != null) {
             Date failureTime = (Date) jwtClaims.get("failureTime");
@@ -137,13 +145,18 @@ public class Jwts extends HashMap {
                 throw new RuntimeException("此token已过有效期");
             }
         }
-
-        // 验证数据篡改
-        Object code = obj.get("code");
-        String encryptionType = code == null ? "AES" : code.toString();
         // 比较签名
-        String signatureNew = dataSignature(obj, jwtClaims, encryptionType, jwtSafetySecret);
-        return signature.equals(signatureNew.replaceAll("\r\n","")) ? true : false;
+        String signatureNew = dataSignature(obj, jwtClaims, jwtSafetySecret);
+        boolean flag = false;
+        if (!signature.equals(signatureNew.replaceAll("\r\n",""))){
+            signatureNew = dataSignature(obj, jwtClaims, Jwts.jwtSafetySecret);
+            if (signature.equals(signatureNew.replaceAll("\r\n",""))){
+                flag = true;
+            }
+        }else{
+            flag = true;
+        }
+        return  flag;
     }
 
 

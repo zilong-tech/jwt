@@ -1,4 +1,4 @@
-package cn.jiayao.myjwt.jwts.common;
+package cn.jiayao.myjwt.jwts.data;
 
 /**
  * 类 名: Header

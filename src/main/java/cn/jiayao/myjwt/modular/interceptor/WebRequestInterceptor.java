@@ -23,11 +23,6 @@ public class WebRequestInterceptor extends WebMvcConfigurerAdapter {
      */
     @Value("${jwt.secret-url}")
     private String jwtSecretUrl;
-    /**
-     * JWT密钥
-     */
-    @Value("${jwt.safety.secret}")
-    private String jwtSafetySecret;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {

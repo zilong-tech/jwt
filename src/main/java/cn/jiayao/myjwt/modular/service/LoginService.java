@@ -1,8 +1,8 @@
 package cn.jiayao.myjwt.modular.service;
 
-import cn.jiayao.myjwt.jwts.common.*;
 import cn.jiayao.myjwt.modular.entity.Customer;
-import org.springframework.beans.factory.annotation.Value;
+import cn.jiayao.myjwt.modular.utils.TokenUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -17,11 +17,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class LoginService {
 
-    @Value("${jwt.safety.secret}")
-    private String jwtSafetySecret;
-
-    @Value("${jwt.valid.time}")
-    private int jwtValidTime;
+    @Autowired
+    private TokenUtils tokenUtils;
 
     /**
      * 登录
@@ -32,9 +29,7 @@ public class LoginService {
     public String login(String customerId) {
         Customer customer = new Customer();
         customer.setId(customerId);
-        customer.setName("jiayao");
-        customer.setPhone("1234567890");
-        return createTokenString(customer);
+        return tokenUtils.createDefaultTokenStringSm4(customer);
     }
 
     /**
@@ -46,32 +41,9 @@ public class LoginService {
     public Customer findCustomerById(String customerId) {
         Customer customer = new Customer();
         customer.setId(customerId);
-        customer.setName("jiayao");
-        customer.setPhone("1234567890");
         return customer;
     }
 
-    /**
-     * 生成token
-     *
-     * @param customer
-     * @return
-     */
-    public String createTokenString(Customer customer) {
-        String jwtToken = null;
-        try {
-            jwtToken = Jwts.header(Header.SM4, jwtSafetySecret)
-                    .payload(new JwtClaims()
-                            .put("id", customer.getId())
-                            .put("name", customer.getName())
-                            .put("phone", customer.getPhone())
-                            .put("failureTime", FailureTimeUtils.creatValidTime(FailureTime.DAY, jwtValidTime))
-                            .put("mytest", "我的个性属性"))
-                    .compact();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return jwtToken.replaceAll("\r\n","");
-    }
+
 
 }

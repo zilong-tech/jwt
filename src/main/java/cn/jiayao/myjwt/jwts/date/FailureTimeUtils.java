@@ -1,4 +1,4 @@
-package cn.jiayao.myjwt.jwts.common;
+package cn.jiayao.myjwt.jwts.date;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -34,6 +34,9 @@ public class FailureTimeUtils {
         }
         if (failureTime.name().equals(FailureTime.DAY)) {
             return getDateAfter(date, jwtValidTime);
+        }
+        if (failureTime.name().equals(FailureTime.FOREVER)){
+            return null;
         }
         return null;
     }

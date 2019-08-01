@@ -1,4 +1,4 @@
-package cn.jiayao.myjwt.jwts.common;
+package cn.jiayao.myjwt.jwts.date;
 
 /**
  * 类 名: FailureTime
@@ -25,6 +25,9 @@ public enum FailureTime {
     /**
      * 天
      */
-    DAY
-
+    DAY,
+    /**
+     * 永久
+     */
+    FOREVER
 }
